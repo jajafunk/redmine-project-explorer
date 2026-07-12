@@ -1,38 +1,8 @@
-.ticket-tree-list {
-  list-style: none;
-  margin: 0;
-  padding-left: 1.7em;
-}
-
-.ticket-tree-root {
-  padding-left: 0;
-}
-
-.ticket-tree-node {
-  margin: 0.35em 0;
-  line-height: 1.7;
-}
-
-.ticket-tree-node summary {
-  cursor: pointer;
-}
-
-.ticket-tree-link {
-  font-weight: 500;
-}
-
-.ticket-tree-status {
-  margin-left: 0.55em;
-  color: #777;
-  font-size: 0.9em;
-}
-
-.ticket-tree-leaf {
-  padding-left: 1.1em;
-}
-
-.ticket-tree-node details > .ticket-tree-list {
-  margin-left: 0.45em;
-  padding-left: 1.25em;
-  border-left: 1px solid #d7d7d7;
-}
+.ticket-tree-app{--tree-line:#c9d2dc;--tree-hover:rgba(70,130,180,.09)}
+.ticket-tree-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:.65rem;margin:0 0 1rem;padding:.75rem;border:1px solid #d7d7d7;border-radius:6px;background:#f7f9fb}
+.ticket-tree-toolbar button,.ticket-tree-toolbar select,.ticket-tree-toolbar input[type=search]{min-height:2rem}.ticket-tree-search-wrap{display:flex;align-items:center;gap:.4rem;flex:1 1 22rem}.ticket-tree-search-wrap input{width:100%;box-sizing:border-box}.ticket-tree-auto-refresh{white-space:nowrap}.ticket-tree-result-count{min-height:1.2em;color:#666;font-size:.9em}
+.ticket-tree-list{list-style:none;margin:0;padding-left:1.55rem;position:relative}.ticket-tree-root{padding-left:0}.ticket-tree-node{position:relative;margin:.2rem 0}.ticket-tree-list:not(.ticket-tree-root)>.ticket-tree-node:before{content:"";position:absolute;top:-.45rem;left:-1rem;width:.85rem;height:1.35rem;border-left:1px solid var(--tree-line);border-bottom:1px solid var(--tree-line)}.ticket-tree-list:not(.ticket-tree-root)>.ticket-tree-node:after{content:"";position:absolute;top:.9rem;bottom:-.45rem;left:-1rem;border-left:1px solid var(--tree-line)}.ticket-tree-list:not(.ticket-tree-root)>.ticket-tree-node:last-child:after{display:none}
+.ticket-tree-node summary,.ticket-tree-leaf{padding:.3rem .4rem;border-radius:4px}.ticket-tree-node summary:hover,.ticket-tree-leaf:hover{background:var(--tree-hover)}.ticket-tree-node summary{cursor:pointer}.ticket-tree-title-line{display:inline-flex;flex-wrap:wrap;align-items:center;gap:.35rem}.ticket-tree-link{font-weight:600}.ticket-tree-meta{display:block;margin-left:1.2rem;color:#777;font-size:.82em;line-height:1.45}
+.ticket-tree-badge{display:inline-block;padding:.05rem .45rem;border-radius:999px;color:#fff;font-size:.78em;line-height:1.5}.ticket-tree-status-0{background:#2f80ed}.ticket-tree-status-1{background:#00a67e}.ticket-tree-status-2{background:#8e44ad}.ticket-tree-status-3{background:#d97706}.ticket-tree-status-4{background:#c0392b}.ticket-tree-status-5{background:#607d8b}.ticket-tree-status-closed{background:#626b73}.ticket-tree-priority{color:#555;font-size:.85em;white-space:nowrap}.ticket-tree-node[hidden]{display:none!important}
+.ticket-tree-context-menu{position:fixed;z-index:10000;min-width:12rem;padding:.3rem;border:1px solid #bbb;border-radius:6px;background:#fff;box-shadow:0 8px 25px rgba(0,0,0,.2)}.ticket-tree-context-menu button{display:block;width:100%;padding:.5rem .65rem;border:0;background:transparent;text-align:left;cursor:pointer}.ticket-tree-context-menu button:hover{background:#eef4fa}.ticket-tree-context-menu button[hidden]{display:none}
+@media(max-width:700px){.ticket-tree-toolbar{align-items:stretch}.ticket-tree-toolbar>*{flex:1 1 100%}.ticket-tree-meta{margin-left:0}}

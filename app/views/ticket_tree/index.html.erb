@@ -1,26 +1,32 @@
 <% html_title 'チケットツリー' %>
-
 <% content_for :header_tags do %>
-  <%= stylesheet_link_tag 'project_explorer',
-                          plugin: 'redmine_project_explorer' %>
+  <%= stylesheet_link_tag 'project_explorer', plugin: 'redmine_project_explorer' %>
+  <%= javascript_include_tag 'project_explorer', plugin: 'redmine_project_explorer', defer: true %>
 <% end %>
-
-<div class="contextual">
-  <%= link_to 'チケット一覧',
-              project_issues_path(@project),
-              class: 'icon icon-list' %>
-</div>
-
+<div class="contextual"><%= link_to 'チケット一覧', project_issues_path(@project), class: 'icon icon-list' %></div>
 <h2>チケットツリー</h2>
-
-<% if @root_issues.any? %>
-  <ul class="ticket-tree-list ticket-tree-root">
-    <%= safe_join(
-          @root_issues.map do |issue|
-            render_ticket_tree_node(issue, @children_by_parent)
-          end
-        ) %>
-  </ul>
-<% else %>
-  <p class="nodata">表示できるチケットがありません。</p>
-<% end %>
+<div id="ticket-tree-app" class="ticket-tree-app" data-project-id="<%= @project.id %>" data-refresh-seconds="60">
+  <div class="ticket-tree-toolbar">
+    <label class="ticket-tree-search-wrap">🔍 <input id="ticket-tree-search" type="search" placeholder="番号・件名・状態・担当者で検索" autocomplete="off"></label>
+    <label>並び替え
+      <select id="ticket-tree-sort">
+        <% [['tree','親子順'],['id','ID順'],['updated','更新日順'],['priority','優先度順'],['assignee','担当者順']].each do |value, label| %>
+          <option value="<%= value %>" <%= 'selected' if @sort == value %>><%= label %></option>
+        <% end %>
+      </select>
+    </label>
+    <button id="ticket-tree-expand-all" type="button">すべて展開</button>
+    <button id="ticket-tree-collapse-all" type="button">すべて折りたたむ</button>
+    <label class="ticket-tree-auto-refresh"><input id="ticket-tree-auto-refresh" type="checkbox"> 60秒ごとに自動更新</label>
+  </div>
+  <p id="ticket-tree-result-count" class="ticket-tree-result-count"></p>
+  <% if @root_issues.any? %>
+    <ul id="ticket-tree-root" class="ticket-tree-list ticket-tree-root"><%= safe_join(@root_issues.map { |issue| render_ticket_tree_node(issue, @children_by_parent) }) %></ul>
+  <% else %><p class="nodata">表示できるチケットがありません。</p><% end %>
+  <div id="ticket-tree-context-menu" class="ticket-tree-context-menu" hidden>
+    <button type="button" data-action="open">チケットを開く</button>
+    <button type="button" data-action="edit">編集</button>
+    <button type="button" data-action="child">子チケットを作成</button>
+    <button type="button" data-action="copy">リンクをコピー</button>
+  </div>
+</div>
