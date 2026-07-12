@@ -1,8 +1,12 @@
-Redmine::Plugin.register :redmine_ticket_tree do
-  name 'Redmine Ticket Tree'
+Redmine::Plugin.register :redmine_project_explorer do
+  name 'Redmine Project Explorer'
   author 'AI_Redmine Project'
-  description 'Adds a minimal ticket tree page to each project.'
-  version '0.2.0'
+  description 'Displays project issues as a parent-child ticket tree.'
+  version '1.0.0'
+
+  permission :view_ticket_tree,
+             { ticket_tree: [:index] },
+             public: true
 
   menu :project_menu,
        :ticket_tree,

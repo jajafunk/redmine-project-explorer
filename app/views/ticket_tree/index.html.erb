@@ -1,8 +1,26 @@
 <% html_title 'チケットツリー' %>
 
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'project_explorer',
+                          plugin: 'redmine_project_explorer' %>
+<% end %>
+
+<div class="contextual">
+  <%= link_to 'チケット一覧',
+              project_issues_path(@project),
+              class: 'icon icon-list' %>
+</div>
+
 <h2>チケットツリー</h2>
 
-<div class="box">
-  <p>チケットツリープラグインが正常に読み込まれました。</p>
-  <p>プロジェクト：<strong><%= @project.name %></strong></p>
-</div>
+<% if @root_issues.any? %>
+  <ul class="ticket-tree-list ticket-tree-root">
+    <%= safe_join(
+          @root_issues.map do |issue|
+            render_ticket_tree_node(issue, @children_by_parent)
+          end
+        ) %>
+  </ul>
+<% else %>
+  <p class="nodata">表示できるチケットがありません。</p>
+<% end %>

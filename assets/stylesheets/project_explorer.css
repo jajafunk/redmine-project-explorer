@@ -1,0 +1,38 @@
+.ticket-tree-list {
+  list-style: none;
+  margin: 0;
+  padding-left: 1.7em;
+}
+
+.ticket-tree-root {
+  padding-left: 0;
+}
+
+.ticket-tree-node {
+  margin: 0.35em 0;
+  line-height: 1.7;
+}
+
+.ticket-tree-node summary {
+  cursor: pointer;
+}
+
+.ticket-tree-link {
+  font-weight: 500;
+}
+
+.ticket-tree-status {
+  margin-left: 0.55em;
+  color: #777;
+  font-size: 0.9em;
+}
+
+.ticket-tree-leaf {
+  padding-left: 1.1em;
+}
+
+.ticket-tree-node details > .ticket-tree-list {
+  margin-left: 0.45em;
+  padding-left: 1.25em;
+  border-left: 1px solid #d7d7d7;
+}
