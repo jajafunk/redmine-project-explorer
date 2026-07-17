@@ -31,6 +31,7 @@ class TicketTreeController < ApplicationController
   def export_html
     zip_path, filename, work_dir =
       RedmineProjectExplorer::HtmlExporter.new(
+        project: @project,
         root_issue: @export_issue,
         user: User.current,
         view_context: view_context
@@ -65,6 +66,8 @@ class TicketTreeController < ApplicationController
   end
 
   def find_export_issue
+    return if params[:issue_id].blank?
+
     @export_issue = @project.issues.visible(User.current).find(params[:issue_id])
   rescue ActiveRecord::RecordNotFound
     render_404

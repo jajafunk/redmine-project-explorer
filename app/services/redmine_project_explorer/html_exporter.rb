@@ -7,9 +7,10 @@ require 'zip'
 
 module RedmineProjectExplorer
   class HtmlExporter
-    attr_reader :root_issue, :user, :view_context
+    attr_reader :project, :root_issue, :user, :view_context
 
-    def initialize(root_issue:, user:, view_context:)
+    def initialize(project:, root_issue: nil, user:, view_context:)
+      @project = project
       @root_issue = root_issue
       @user = user
       @view_context = view_context
@@ -43,23 +44,40 @@ module RedmineProjectExplorer
     private
 
     def load_issues
-      @issues = Issue.visible(user)
-                     .where(root_id: root_issue.root_id)
-                     .where('issues.lft >= ? AND issues.rgt <= ?', root_issue.lft, root_issue.rgt)
+      scope = project.issues.visible(user)
                      .includes(
                        :project, :tracker, :status, :priority, :assigned_to,
                        :author, :fixed_version, :category, :attachments,
                        :custom_values, :journals
                      )
-                     .order(:lft)
-                     .to_a
 
+      if root_issue
+        scope = scope.where(root_id: root_issue.root_id)
+                     .where(
+                       'issues.lft >= ? AND issues.rgt <= ?',
+                       root_issue.lft,
+                       root_issue.rgt
+                     )
+      end
+
+      @issues = scope.order(:root_id, :lft, :id).to_a
       @issue_ids = @issues.index_by(&:id)
       @children = @issues.group_by(&:parent_id)
+      @root_issues = @issues.select do |issue|
+        issue.parent_id.blank? || !@issue_ids.key?(issue.parent_id)
+      end
     end
 
     def export_name
-      @export_name ||= "project-explorer-issue-#{root_issue.id}-#{Time.current.strftime('%Y%m%d-%H%M%S')}"
+      @export_name ||= begin
+        timestamp = Time.current.strftime('%Y%m%d-%H%M%S')
+
+        if root_issue
+          "project-explorer-issue-#{root_issue.id}-#{timestamp}"
+        else
+          "project-explorer-project-#{project.identifier}-#{timestamp}"
+        end
+      end
     end
 
     def write_file(relative_path, content)
@@ -96,13 +114,23 @@ module RedmineProjectExplorer
     end
 
     def tree_page
+      page_title =
+        if root_issue
+          "##{root_issue.id} #{h(root_issue.subject)}"
+        else
+          "#{h(project.name)}－全チケット"
+        end
+
+      tree_html = @root_issues.map { |issue| tree_node(issue) }.join("
+")
+
       <<~HTML
         <!doctype html>
         <html lang="ja">
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>##{root_issue.id} #{h(root_issue.subject)}</title>
+          <title>#{page_title}</title>
           <link rel="stylesheet" href="assets/project-explorer.css">
           <script defer src="assets/project-explorer.js"></script>
         </head>
@@ -110,7 +138,7 @@ module RedmineProjectExplorer
           <header class="page-header">
             <div>
               <p class="eyebrow">Redmine Project Explorer HTML Export</p>
-              <h1>##{root_issue.id} #{h(root_issue.subject)}</h1>
+              <h1>#{page_title}</h1>
               <p>#{@issues.size}件 / #{h(Time.current.to_s)}</p>
             </div>
             <div class="actions">
@@ -121,7 +149,7 @@ module RedmineProjectExplorer
           <main>
             <section class="tree-card">
               <ul class="issue-tree root-tree">
-                #{tree_node(root_issue)}
+                #{tree_html}
               </ul>
             </section>
           </main>

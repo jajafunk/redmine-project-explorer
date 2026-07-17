@@ -17,7 +17,9 @@
     </label>
     <button id="ticket-tree-expand-all" type="button">すべて展開</button>
     <button id="ticket-tree-collapse-all" type="button">すべて折りたたむ</button>
-    <button id="ticket-tree-export-html" type="button" disabled>選択以下をHTML書き出し</button>
+    <button id="ticket-tree-export-html"
+            type="button"
+            data-export-url="<%= export_all_project_ticket_tree_html_path(@project) %>">全体をHTML書き出し</button>
     <label class="ticket-tree-auto-refresh"><input id="ticket-tree-auto-refresh" type="checkbox"> 60秒ごとに自動更新</label>
   </div>
   <p id="ticket-tree-result-count" class="ticket-tree-result-count"></p>
