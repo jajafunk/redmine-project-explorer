@@ -17,6 +17,7 @@ module TicketTreeHelper
     ])
     data = {
       issue_id: issue.id, issue_url: issue_path(issue),
+      export_url: export_project_ticket_tree_html_path(@project, issue),
       edit_url: (edit_issue_path(issue) if User.current.allowed_to?(:edit_issues, @project)),
       child_url: (new_project_issue_path(@project, issue: { parent_issue_id: issue.id }) if User.current.allowed_to?(:add_issues, @project)),
       search_text: [issue.id, issue.subject, issue.status.name, issue.priority&.name, issue.assigned_to&.name].compact.join(' ').downcase

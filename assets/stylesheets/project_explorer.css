@@ -6,3 +6,15 @@
 .ticket-tree-badge{display:inline-block;padding:.05rem .45rem;border-radius:999px;color:#fff;font-size:.78em;line-height:1.5}.ticket-tree-status-0{background:#2f80ed}.ticket-tree-status-1{background:#00a67e}.ticket-tree-status-2{background:#8e44ad}.ticket-tree-status-3{background:#d97706}.ticket-tree-status-4{background:#c0392b}.ticket-tree-status-5{background:#607d8b}.ticket-tree-status-closed{background:#626b73}.ticket-tree-priority{color:#555;font-size:.85em;white-space:nowrap}.ticket-tree-node[hidden]{display:none!important}
 .ticket-tree-context-menu{position:fixed;z-index:10000;min-width:12rem;padding:.3rem;border:1px solid #bbb;border-radius:6px;background:#fff;box-shadow:0 8px 25px rgba(0,0,0,.2)}.ticket-tree-context-menu button{display:block;width:100%;padding:.5rem .65rem;border:0;background:transparent;text-align:left;cursor:pointer}.ticket-tree-context-menu button:hover{background:#eef4fa}.ticket-tree-context-menu button[hidden]{display:none}
 @media(max-width:700px){.ticket-tree-toolbar{align-items:stretch}.ticket-tree-toolbar>*{flex:1 1 100%}.ticket-tree-meta{margin-left:0}}
+
+.ticket-tree-selected > details > summary,
+.ticket-tree-selected > .ticket-tree-leaf {
+  outline: 2px solid #2f80ed;
+  outline-offset: 1px;
+  background: rgba(47, 128, 237, .10);
+}
+
+#ticket-tree-export-html:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
