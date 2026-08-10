@@ -1,7 +1,10 @@
 module TicketTreeHelper
   def render_ticket_tree_node(issue, children_by_parent)
     children = children_by_parent[issue.id]
-    link = link_to("##{issue.id} #{issue.subject}", issue_path(issue), class: 'ticket-tree-link')
+    link = safe_join([
+      link_to("##{issue.id} #{issue.subject}", issue_path(issue), class: 'ticket-tree-link'),
+      content_tag(:span, '', class: 'ticket-tree-child-count', data: { child_count_for: issue.id }, hidden: true)
+    ], ' ')
     status = content_tag(:span, issue.status.name,
       class: "ticket-tree-badge #{ticket_tree_status_class(issue)}")
     priority = content_tag(:span,
@@ -20,6 +23,11 @@ module TicketTreeHelper
       export_url: export_project_ticket_tree_html_path(@project, issue),
       edit_url: (edit_issue_path(issue) if User.current.allowed_to?(:edit_issues, @project)),
       child_url: (new_project_issue_path(@project, issue: { parent_issue_id: issue.id }) if User.current.allowed_to?(:add_issues, @project)),
+      status_id: issue.status.id,
+      status_name: issue.status.name,
+      status_closed: issue.status.is_closed? ? '1' : '0',
+      priority_id: issue.priority&.id,
+      priority_name: issue.priority&.name,
       search_text: [issue.id, issue.subject, issue.status.name, issue.priority&.name, issue.assigned_to&.name].compact.join(' ').downcase
     }
     content_tag(:li, class: 'ticket-tree-node', data: data) do
@@ -50,3 +58,4 @@ module TicketTreeHelper
     end
   end
 end
+

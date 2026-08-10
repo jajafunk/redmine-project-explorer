@@ -34,7 +34,9 @@ class TicketTreeController < ApplicationController
         project: @project,
         root_issue: @export_issue,
         user: User.current,
-        view_context: view_context
+        view_context: view_context,
+        issue_ids: export_issue_ids,
+        show_child_counts: ActiveModel::Type::Boolean.new.cast(params[:show_child_counts])
       ).call
 
     send_data(
@@ -71,6 +73,15 @@ class TicketTreeController < ApplicationController
     @export_issue = @project.issues.visible(User.current).find(params[:issue_id])
   rescue ActiveRecord::RecordNotFound
     render_404
+  end
+
+
+  def export_issue_ids
+    return nil unless params.key?(:issue_ids)
+
+    params[:issue_ids].to_s.split(',').filter_map do |value|
+      Integer(value, exception: false)
+    end.uniq
   end
 
   def issue_sort_key(issue)

@@ -20,7 +20,65 @@
     <button id="ticket-tree-export-html"
             type="button"
             data-export-url="<%= export_all_project_ticket_tree_html_path(@project) %>">全体をHTML書き出し</button>
-    <label class="ticket-tree-auto-refresh"><input id="ticket-tree-auto-refresh" type="checkbox"> 60秒ごとに自動更新</label>
+        <div class="ticket-tree-options">
+      <button id="ticket-tree-options-button"
+              class="ticket-tree-options-button"
+              type="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              title="表示設定">
+        <svg class="ticket-tree-options-icon"
+             viewBox="0 0 24 24"
+             width="20"
+             height="20"
+             aria-hidden="true"
+             focusable="false">
+          <circle cx="12" cy="5" r="1.8"></circle>
+          <circle cx="12" cy="12" r="1.8"></circle>
+          <circle cx="12" cy="19" r="1.8"></circle>
+        </svg>
+      </button>
+
+      <div id="ticket-tree-options-menu"
+           class="ticket-tree-options-menu"
+           hidden>
+
+        <div class="ticket-tree-options-title">表示設定</div>
+
+        <label class="ticket-tree-option-row">
+          <input id="ticket-tree-auto-refresh" type="checkbox">
+          60秒ごとに自動更新
+        </label>
+
+        <label class="ticket-tree-option-row">
+          <input id="ticket-tree-show-closed" type="checkbox" checked>
+          終了・却下を表示
+        </label>
+
+        <div class="ticket-tree-options-separator"></div>
+
+        <div class="ticket-tree-options-heading">ステータス</div>
+        <div id="ticket-tree-status-options"></div>
+
+        <div class="ticket-tree-options-separator"></div>
+
+        <div class="ticket-tree-options-heading">優先度</div>
+        <div id="ticket-tree-priority-options"></div>
+
+        <div class="ticket-tree-options-separator"></div>
+
+        <label class="ticket-tree-option-row">
+          <input id="ticket-tree-show-child-counts" type="checkbox">
+          子チケット数を表示
+        </label>
+
+        <div class="ticket-tree-options-separator"></div>
+
+        <button id="ticket-tree-options-reset"
+                class="ticket-tree-options-reset"
+                type="button">表示設定を初期化</button>
+      </div>
+    </div>
   </div>
   <p id="ticket-tree-result-count" class="ticket-tree-result-count"></p>
   <% if @root_issues.any? %>
@@ -33,3 +91,5 @@
     <button type="button" data-action="copy">リンクをコピー</button>
   </div>
 </div>
+
+

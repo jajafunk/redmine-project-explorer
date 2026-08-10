@@ -7,13 +7,15 @@ require 'zip'
 
 module RedmineProjectExplorer
   class HtmlExporter
-    attr_reader :project, :root_issue, :user, :view_context
+    attr_reader :project, :root_issue, :user, :view_context, :issue_ids, :show_child_counts
 
-    def initialize(project:, root_issue: nil, user:, view_context:)
+    def initialize(project:, root_issue: nil, user:, view_context:, issue_ids: nil, show_child_counts: false)
       @project = project
       @root_issue = root_issue
       @user = user
       @view_context = view_context
+      @issue_ids = issue_ids
+      @show_child_counts = show_child_counts
     end
 
     def call
@@ -60,6 +62,8 @@ module RedmineProjectExplorer
                      )
       end
 
+      scope = scope.where(id: issue_ids) unless issue_ids.nil?
+
       @issues = scope.order(:root_id, :lft, :id).to_a
       @issue_ids = @issues.index_by(&:id)
       @children = @issues.group_by(&:parent_id)
@@ -94,6 +98,53 @@ module RedmineProjectExplorer
       view_context.textilizable(object, attribute)
     rescue StandardError
       "<pre>#{h(object.public_send(attribute))}</pre>"
+    end
+
+    def localized_textilized(object, attribute, issue)
+      localize_attachment_links(textilized(object, attribute), issue)
+    end
+
+    def localize_attachment_links(html, issue)
+      result = html.to_s.dup
+
+      visible_attachments(issue).each do |attachment|
+        local_path =
+          "../attachments/issue-#{issue.id}/#{h(attachment_export_name(issue, attachment))}"
+
+        patterns = [
+          %r{(?:https?://[^/"']+)?/attachments/download/#{attachment.id}(?:/[^"'<> ]*)?},
+          %r{(?:https?://[^/"']+)?/attachments/thumbnail/#{attachment.id}(?:/[^"'<> ]*)?},
+          %r{(?:https?://[^/"']+)?/attachments/#{attachment.id}(?:/[^"'<> ]*)?}
+        ]
+
+        patterns.each do |pattern|
+          result.gsub!(pattern, local_path)
+        end
+      end
+
+      result
+    end
+
+    def visible_attachments(issue)
+      issue.attachments.select do |attachment|
+        attachment.visible?(user)
+      rescue StandardError
+        true
+      end
+    end
+
+    def attachment_export_name(issue, attachment)
+      base_name = safe_filename(attachment.filename)
+
+      duplicates = visible_attachments(issue).count do |item|
+        safe_filename(item.filename) == base_name
+      end
+
+      return base_name if duplicates <= 1
+
+      extension = File.extname(base_name)
+      stem = File.basename(base_name, extension)
+      "#{stem}-#{attachment.id}#{extension}"
     end
 
     def format_date_value(value)
@@ -167,6 +218,8 @@ module RedmineProjectExplorer
         issue.assigned_to&.name,
         "#{issue.done_ratio}%"
       ].compact.join(' / ')
+      child_count = show_child_counts ? descendant_count(issue) : nil
+      count_html = child_count.nil? ? '' : %(<span class="tree-child-count"> (#{child_count})</span>)
 
       control = if has_children
                   '<button type="button" class="tree-toggle" aria-expanded="true"></button>'
@@ -185,13 +238,17 @@ module RedmineProjectExplorer
           <div class="tree-row">
             #{control}
             <div>
-              <div class="tree-title">#{issue_link(issue, from_tree: true)}</div>
+              <div class="tree-title">#{issue_link(issue, from_tree: true)}#{count_html}</div>
               <div class="tree-meta">#{h(status)}</div>
             </div>
           </div>
           #{child_html}
         </li>
       HTML
+    end
+
+    def descendant_count(issue)
+      Array(@children[issue.id]).sum { |child| 1 + descendant_count(child) }
     end
 
     def issue_page(issue)
@@ -240,7 +297,7 @@ module RedmineProjectExplorer
             <section class="card">
               <h2>説明</h2>
               <div class="wiki">
-                #{issue.description.present? ? textilized(issue, :description) : '<p class="empty">説明はありません。</p>'}
+                #{issue.description.present? ? localized_textilized(issue, :description, issue) : '<p class="empty">説明はありません。</p>'}
               </div>
             </section>
 
@@ -293,16 +350,12 @@ module RedmineProjectExplorer
     end
 
     def attachments_section(issue)
-      attachments = issue.attachments.select do |attachment|
-        attachment.visible?(user)
-      rescue StandardError
-        true
-      end
+      attachments = visible_attachments(issue)
 
       return '' if attachments.empty?
 
       items = attachments.map do |attachment|
-        filename = safe_filename(attachment.filename)
+        filename = attachment_export_name(issue, attachment)
         %(<li><a href="../attachments/issue-#{issue.id}/#{h(filename)}">#{h(attachment.filename)}</a></li>)
       end.join
 
@@ -321,7 +374,7 @@ module RedmineProjectExplorer
         <<~HTML
           <article class="journal">
             <p class="journal-meta">#{h(journal.user&.name || '-')} / #{format_time_value(journal.created_on)}</p>
-            <div class="wiki">#{textilized(journal, :notes)}</div>
+            <div class="wiki">#{localized_textilized(journal, :notes, issue)}</div>
           </article>
         HTML
       end.join
@@ -340,28 +393,19 @@ module RedmineProjectExplorer
 
     def copy_attachments(issue)
       target = File.join(@export_dir, 'attachments', "issue-#{issue.id}")
-      used = {}
 
-      issue.attachments.each do |attachment|
-        visible = attachment.visible?(user)
-        next unless visible
+      visible_attachments(issue).each do |attachment|
         next unless File.file?(attachment.diskfile)
 
         FileUtils.mkdir_p(target)
-
-        filename = safe_filename(attachment.filename)
-        if used[filename]
-          ext = File.extname(filename)
-          filename = "#{File.basename(filename, ext)}-#{attachment.id}#{ext}"
-        end
-
-        used[filename] = true
+        filename = attachment_export_name(issue, attachment)
         FileUtils.cp(attachment.diskfile, File.join(target, filename))
       rescue StandardError => e
-        Rails.logger.warn("[Project Explorer Export] attachment #{attachment.id}: #{e.message}")
+        Rails.logger.warn(
+          "[Project Explorer Export] attachment #{attachment.id}: #{e.message}"
+        )
       end
     end
-
     def create_zip(zip_path)
       entries = Dir.chdir(@export_dir) do
         Dir.glob('**/*', File::FNM_DOTMATCH)
@@ -428,3 +472,4 @@ module RedmineProjectExplorer
     end
   end
 end
+
