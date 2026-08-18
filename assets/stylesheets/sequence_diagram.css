@@ -1,0 +1,363 @@
+.rpe-sequence-diagram {
+  margin: 1.2rem 0;
+  border: 1px solid #d8dde4;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+.rpe-sequence-header,
+.rpe-sequence-options-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.rpe-sequence-header {
+  padding: .55rem .7rem;
+  border-bottom: 1px solid #e6e9ed;
+  background: #f8fafc;
+  border-radius: 8px 8px 0 0;
+}
+
+.rpe-sequence-title,
+.rpe-sequence-options-title {
+  font-weight: 700;
+  color: #333;
+}
+
+.rpe-sequence-options-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.rpe-sequence-menu-wrap {
+  position: relative;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.rpe-sequence-menu-button,
+.rpe-sequence-zoom-button,
+.rpe-sequence-save-button,
+.rpe-sequence-reset-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 2rem;
+  border: 1px solid #b9c2cc;
+  border-radius: 5px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1.2;
+  vertical-align: middle;
+}
+
+.rpe-sequence-menu-button {
+  padding: .32rem .65rem;
+  white-space: nowrap;
+}
+
+.rpe-sequence-menu-button:hover,
+.rpe-sequence-zoom-button:hover,
+.rpe-sequence-save-button:hover,
+.rpe-sequence-reset-button:hover {
+  background: #edf3f8;
+}
+
+.rpe-sequence-menu {
+  position: absolute;
+  z-index: 11000;
+  top: calc(100% + .3rem);
+  right: 0;
+  min-width: 14rem;
+  padding: .35rem;
+  border: 1px solid #b9c2cc;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .18);
+}
+
+.rpe-sequence-menu[hidden],
+.rpe-sequence-options[hidden],
+.rpe-sequence-zoom-controls[hidden],
+.rpe-sequence-source[hidden] {
+  display: none !important;
+}
+
+.rpe-sequence-menu-item {
+  display: block;
+  width: 100%;
+  padding: .45rem .55rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rpe-sequence-menu-item:hover {
+  background: #edf3f8;
+}
+
+.rpe-sequence-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.rpe-sequence-diagram.rpe-options-open .rpe-sequence-layout {
+  grid-template-columns: minmax(0, 1fr) 340px;
+}
+
+.rpe-sequence-main {
+  min-width: 0;
+}
+
+.rpe-sequence-viewer {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  padding: .8rem;
+  background: #fff;
+  overflow: visible;
+}
+
+.rpe-sequence-canvas {
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+}
+
+.rpe-sequence-canvas svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  overflow: visible;
+  transform-origin: top left;
+}
+
+/* 100%時は通常表示。100%以外では縦横スクロールバーを常時表示する。 */
+.rpe-sequence-viewer.rpe-scroll-enabled {
+  max-height: 72vh;
+  overflow: scroll;
+  scrollbar-gutter: stable both-edges;
+  border: 1px solid #e6e9ed;
+  border-radius: 5px;
+}
+
+.rpe-sequence-zoom-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin: 0;
+}
+
+.rpe-sequence-zoom-button {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 .5rem;
+}
+
+.rpe-sequence-zoom-label {
+  min-width: 3.8rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.rpe-sequence-check-row {
+  display: grid;
+  grid-template-columns: 1.2rem minmax(0, 1fr);
+  align-items: center;
+  gap: .45rem;
+  width: 100%;
+  margin: .55rem 0;
+  padding: 0;
+  line-height: 1.45;
+  float: none !important;
+  clear: both;
+}
+
+.rpe-sequence-check-row > span {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rpe-sequence-check-row input[type="checkbox"] {
+  margin-top: .2rem;
+}
+
+.rpe-sequence-options {
+  position: sticky;
+  top: .75rem;
+  align-self: start;
+  box-sizing: border-box;
+  max-height: calc(100vh - 1.5rem);
+  overflow: auto;
+  padding: .8rem;
+  border-left: 1px solid #e6e9ed;
+  background: #fafbfc;
+}
+
+/* Redmineのフォーム用label/float指定をプレビューオプション内へ持ち込まない */
+.rpe-sequence-options *,
+.rpe-sequence-options *::before,
+.rpe-sequence-options *::after {
+  box-sizing: border-box;
+}
+
+.rpe-sequence-options label {
+  float: none !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+.rpe-sequence-options input,
+.rpe-sequence-options button,
+.rpe-sequence-options span {
+  max-width: 100%;
+}
+
+.rpe-sequence-options button {
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+}
+
+.rpe-sequence-options-header {
+  position: sticky;
+  z-index: 4;
+  top: -.8rem;
+  margin: -.8rem -.8rem .7rem;
+  padding: .65rem .8rem;
+  border-bottom: 1px solid #e1e5ea;
+  background: #fafbfc;
+}
+
+.rpe-sequence-option-section {
+  margin-bottom: .7rem;
+  padding: .65rem;
+  border: 1px solid #dfe4e9;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.rpe-sequence-option-section h4 {
+  margin: 0 0 .55rem;
+  font-size: .95rem;
+}
+
+.rpe-sequence-option-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 2rem;
+  margin: .35rem 0;
+  min-width: 0;
+}
+
+.rpe-sequence-zoom-row {
+  align-items: center;
+}
+
+.rpe-sequence-zoom-row.rpe-sequence-zoom-controls {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.rpe-sequence-field-label {
+  flex: 0 0 5.5rem;
+  min-width: 5.5rem;
+  margin: 0 !important;
+  padding: 0 !important;
+  float: none !important;
+  width: auto !important;
+  text-align: left !important;
+  white-space: nowrap;
+}
+
+.rpe-sequence-option-row input[type="number"],
+.rpe-sequence-option-row input[type="text"] {
+  width: 7rem;
+  box-sizing: border-box;
+}
+
+.rpe-sequence-option-row input[type="color"] {
+  width: 3rem;
+  height: 2rem;
+  padding: 1px;
+}
+
+.rpe-sequence-save-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin-top: .65rem;
+}
+
+.rpe-sequence-save-button,
+.rpe-sequence-reset-button {
+  padding: .38rem .7rem;
+}
+
+.rpe-sequence-reset-button {
+  margin-top: .55rem;
+}
+
+.rpe-sequence-error {
+  margin: .7rem;
+  padding: .7rem;
+  border: 1px solid #d88;
+  border-radius: 5px;
+  background: #fff2f2;
+  color: #8a1f1f;
+  white-space: pre-wrap;
+}
+
+.rpe-sequence-source {
+  margin: .7rem .7rem 0;
+  padding: .7rem;
+  overflow: auto;
+  border: 1px solid #d8dde4;
+  border-radius: 5px;
+  background: #f6f8fa;
+  white-space: pre;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: .9rem;
+}
+
+@media (max-width: 980px) {
+  .rpe-sequence-diagram.rpe-options-open .rpe-sequence-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rpe-sequence-options {
+    position: relative;
+    top: auto;
+    max-height: none;
+    border-top: 1px solid #e6e9ed;
+    border-left: 0;
+  }
+
+  .rpe-sequence-options-header {
+    position: static;
+    margin: -.8rem -.8rem .7rem;
+  }
+}
+
+@media (max-width: 800px) {
+  .rpe-sequence-option-row {
+    flex-wrap: wrap;
+  }
+}
