@@ -1,3 +1,58 @@
+
+## v3.4.7 (2026-08-19)
+- Flowchart preview now supports Redmine live-preview DOM (`<p>` + `<br>`) in addition to `<pre>`.
+- Fixes flowchart/graph source remaining as plain text in issue and Wiki previews.
+## 3.4.6 - 2026-08-19
+
+- Redmine画面用のフローチャート描画処理を `sequence_diagram.js` に同梱
+- 新規 `flowchart.js` が `public/plugin_assets` へ反映されない環境でもフローチャートを表示できるよう修正
+- Redmine画面では `sequence_diagram.js` 1本だけを読み込み、二重描画を防止
+- `flowchart TD/TB/BT/LR/RL` / `graph TD/TB/BT/LR/RL` を引き続きオフライン描画
+
+## 3.4.5 - 2026-08-19
+
+- RedmineのRBPDFがSVG画像を直接描画できないため、PDF用シーケンス図をSVGからPNGへローカル変換して埋め込む方式へ変更。
+- ImageMagick 7の `magick` コマンドをシェルを介さず実行し、SVG→PNGを完全ローカルで変換。
+- ITCPDFの画像解決パッチをPNG専用に変更し、`tmp/redmine_project_explorer_pdf` 配下の生成PNGのみ許可。
+- PDFログに `rasterized SVG to PNG` / `using local PNG` を出力し、変換経路を確認可能にした。
+- CDN・外部API・外部レンダリングサーバーは使用しない。
+
+## 3.4.4 - 2026-08-19
+
+- PDF用パッチを `Rails.configuration.to_prepare` のみへ依存せず、プラグイン初期化時に即時適用する方式へ修正。
+- `Redmine::Export::PDF::IssuesPdfHelper` / `IssuesHelper` / `ITCPDF` への `prepend` を冪等な `PdfPatchInstaller.apply!` に集約。
+- 開発時リロード用に `to_prepare` も残し、即時適用と再適用の両方に対応。
+- `rails runner` で確認された「PDFパッチの ancestors が空」の原因に対応。
+
+## 3.4.3 - 2026-08-19
+
+- PDF出力のMermaidシーケンス図変換パッチを、IssuesHelperだけでなくRedmine::Export::PDF::IssuesPdfHelper本体にも適用。
+- PDF生成時のローカルSVG解決を強化し、適用状況をRedmineログへ記録。
+- v3.4.2でPDFにMermaidコードが残る問題を修正。
+
+## 3.4.2 - 2026-08-19
+
+- Fix Redmine issue PDF export so `sequenceDiagram` blocks render as SVG diagrams instead of source code.
+- Patch `IssuesHelper` directly to avoid PDF helper load-order differences.
+- Resolve generated SVG through Redmine ITCPDF using a local, restricted cache under `tmp/redmine_project_explorer_pdf`.
+- No CDN, external API, or external rendering server is used.
+
+# 3.4.1 - 2026-08-19
+
+- チケットツリーHTML書き出しの個別チケットHTMLでもMermaid図をローカル描画するよう修正
+- HTML書き出しZIPへ `sequence_diagram.js` / `flowchart.js` / `sequence_diagram.css` を同梱し、オフラインで描画
+- 書き出したHTMLをブラウザからPDF保存した場合も、コードではなく描画済み図を印刷
+- Redmine標準のチケットPDF出力で `sequenceDiagram` コードブロックをSVG画像へ変換して出力するPDF用パッチを追加
+- PDF変換は外部サーバー・CDNを使用せずRedmine内で完結
+
+# 3.4.0 - 2026-08-19
+
+- Redmineチケット本文・WikiへMermaidフローチャート表示を追加
+- `flowchart` / `graph` の TD/TB/BT/LR/RL をサポート
+- 基本ノード形状、基本エッジ、エッジラベルに対応
+- v3.3.7のズーム・縦横スクロール・Mermaidコード表示・PNG/JPEG/SVG保存UIをフローチャートにも適用
+- 実行時に外部ネットワークを使用しない完全オフライン実装
+
 # 3.3.7 - 2026-08-18
 
 - 「スクロール表示を有効にする（縦・横）」チェックを削除

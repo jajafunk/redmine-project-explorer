@@ -31,6 +31,9 @@ module RedmineProjectExplorer
       write_file('index.html', tree_page)
       write_file('assets/project-explorer.css', export_css)
       write_file('assets/project-explorer.js', export_js)
+      write_file('assets/sequence-diagram.js', plugin_asset('assets/javascripts/sequence_diagram.js'))
+      write_file('assets/flowchart.js', plugin_asset('assets/javascripts/flowchart.js'))
+      write_file('assets/sequence-diagram.css', plugin_asset('assets/stylesheets/sequence_diagram.css'))
 
       @issues.each do |issue|
         copy_attachments(issue)
@@ -82,6 +85,11 @@ module RedmineProjectExplorer
           "project-explorer-project-#{project.identifier}-#{timestamp}"
         end
       end
+    end
+
+    def plugin_asset(relative_path)
+      plugin_root = File.expand_path('../../..', __dir__)
+      File.read(File.join(plugin_root, relative_path), encoding: 'UTF-8')
     end
 
     def write_file(relative_path, content)
@@ -263,6 +271,9 @@ module RedmineProjectExplorer
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <title>##{issue.id} #{h(issue.subject)}</title>
           <link rel="stylesheet" href="../assets/project-explorer.css">
+          <link rel="stylesheet" href="../assets/sequence-diagram.css">
+          <script defer src="../assets/sequence-diagram.js"></script>
+          <script defer src="../assets/flowchart.js"></script>
         </head>
         <body>
           <header class="page-header">
@@ -467,7 +478,7 @@ module RedmineProjectExplorer
         [hidden]{display:none!important}.properties{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 26px}.properties>div{display:grid;grid-template-columns:9rem 1fr;border-bottom:1px solid #edf0f2;padding:8px 0}.properties dt{color:#68737d;font-weight:600}.properties dd{margin:0;overflow-wrap:anywhere}
         .wiki{overflow-wrap:anywhere}.wiki pre{overflow:auto;background:#f5f7f9;border:1px solid #dce1e6;border-radius:6px;padding:12px}.wiki img{max-width:100%;height:auto}.journal{border-top:1px solid #e5e9ed;padding:14px 0}
         @media(max-width:700px){.page-header{align-items:flex-start;flex-direction:column}.properties{grid-template-columns:1fr}.properties>div{grid-template-columns:7rem 1fr}.issue-tree{padding-left:16px}}
-        @media print{.actions,.button{display:none}.tree-card,.card{box-shadow:none}}
+        @media print{.actions,.button,.rpe-sequence-options,.rpe-sequence-toolbar{display:none!important}.tree-card,.card{box-shadow:none}.rpe-sequence-component{display:block!important}.rpe-sequence-main{width:100%!important}.rpe-sequence-viewport{overflow:visible!important;max-height:none!important}.rpe-sequence-viewport svg{max-width:100%!important;height:auto!important}}
       CSS
     end
   end

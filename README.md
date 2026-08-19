@@ -1,3 +1,9 @@
+
+## v3.4.7 (2026-08-19)
+- Flowchart preview now supports Redmine live-preview DOM (`<p>` + `<br>`) in addition to `<pre>`.
+- Fixes flowchart/graph source remaining as plain text in issue and Wiki previews.
+# Redmine Project Explorer v3.4.6
+
 # Redmine Project Explorer
 
 Redmine 6.0.7向けチケットツリープラグイン。
@@ -34,6 +40,17 @@ Project Explorerでチケットを選択し、「#番号 以下をHTML書き出�
 - 子チケット数は現在表示中の子孫チケット数を表示
 - HTML書き出しでも子チケット数表示設定を反映
 
+
+
+## PDF出力（v3.4.6）
+
+Redmine標準PDF出力では、シーケンス図を完全ローカルでPNG化して埋め込みます。
+
+- Mermaidコードを内蔵レンダラーでSVG生成
+- ローカルのImageMagick (`magick`) でSVGをPNGへ変換
+- RBPDFにはPNGを渡してPDFへ埋め込み
+- CDN、外部API、外部レンダリングサーバーは使用しない
+- 生成キャッシュは `tmp/redmine_project_explorer_pdf` 配下のみを使用
 
 ## Mermaidシーケンス図（v3.3.0）
 
@@ -88,3 +105,35 @@ Redmineのチケット本文およびWikiで、`sequenceDiagram` から始まる
 - プレビューオプションを閉じても現在のズーム倍率を維持
 - ズーム倍率は手動操作または「画面表示をリセット」の実行時だけ変更
 - 100%へ戻した時点で縦・横スクロールバーを自動的に消す
+
+
+## Mermaidフローチャート（v3.4.0）
+
+Redmineのチケット本文およびWikiで、`flowchart` または `graph` から始まるMermaidコードブロックをフローチャートとして表示します。
+
+- `flowchart TD/TB/BT/LR/RL` と `graph TD/TB/BT/LR/RL` を対象
+- Redmine画面ではフローチャート描画処理を `sequence_diagram.js` に同梱し、追加アセット公開に依存しません
+- 基本ノード（矩形、角丸、判定、円、サブルーチン、データベース）
+- 基本エッジ（`-->`, `---`, `-.->`, `==>`）とエッジラベル
+- シーケンス図と同じ「その他」メニュー、Mermaidコード表示、右側プレビューオプション
+- 100%以外のズーム時に縦横スクロール
+- PNG / JPEG / SVG 保存、保存解像度指定、画像保存初期化
+- 実行時にCDN・外部API・Mermaidサーバーへ接続しない完全オフライン方式
+
+現段階ではフローチャートの基本構文を対象とし、Mermaid全構文（高度なsubgraph、classDef/style/click等）の完全互換を目的とはしていません。
+
+
+## Mermaid書き出し対応（v3.4.1）
+
+- チケットツリーのHTML書き出しでも、シーケンス図／フローチャートをコードのままではなく図として表示
+- 書き出しZIP内に描画用JavaScript/CSSを同梱するため、外部ネットワーク不要
+- 書き出したHTMLをブラウザからPDF保存する場合も図として印刷
+- Redmine標準の単一チケットPDF出力では `sequenceDiagram` をサーバー内蔵SVGレンダラーで画像化して出力
+
+### PDF export
+
+Redmine issue PDF export renders `sequenceDiagram` blocks as locally generated SVG images. Generated SVG files are cached under `tmp/redmine_project_explorer_pdf` and are read only by the local Redmine/RBPDF process. No external network service is used.
+
+
+### v3.4.3 PDF修正
+PDF出力時のシーケンス図変換パッチをRedmineのPDFヘルパ本体へ直接適用し、完全ローカルで生成したSVGをPDFへ渡します。外部CDN/API/サーバーは使用しません。
