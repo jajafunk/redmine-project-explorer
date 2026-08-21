@@ -2,7 +2,7 @@
   'use strict';
 
   const NS = 'http://www.w3.org/2000/svg';
-  const TARGET_PATH = /\/issues\/(?:\d+(?:\/|$)|new(?:\/|$))|\/wiki(?:\/|$)|\/issues\/issue-\d+\.html(?:$|[?#])/;
+  const TARGET_PATH = /\/projects\/[^/]+\/issues(?:\/(?:new|\d+))?(?:\/|$)|\/issues\/(?:\d+(?:\/|$)|new(?:\/|$))|\/wiki(?:\/|$)|\/issues\/issue-\d+\.html(?:$|[?#])/;
   let diagramSerial = 0;
 
   function escapeHtml(value) {
@@ -911,7 +911,7 @@
   'use strict';
 
   const NS = 'http://www.w3.org/2000/svg';
-  const TARGET_PATH = /\/issues\/(?:\d+(?:\/|$)|new(?:\/|$))|\/wiki(?:\/|$)|\/issues\/issue-\d+\.html(?:$|[?#])/;
+  const TARGET_PATH = /\/projects\/[^/]+\/issues(?:\/(?:new|\d+))?(?:\/|$)|\/issues\/(?:\d+(?:\/|$)|new(?:\/|$))|\/wiki(?:\/|$)|\/issues\/issue-\d+\.html(?:$|[?#])/;
   let diagramSerial = 0;
 
   function escapeHtml(value) {
@@ -980,7 +980,7 @@
     const idMatch = raw.match(/^([A-Za-z0-9_.-]+)/);
     if (!idMatch) return null;
     const id = idMatch[1];
-    const rest = raw.slice(id.length).trim();
+    const rest = raw.slice(id.length).trim().replace(/\n+/g, '<br/>');
     if (!rest) return { id, label: id, shape: 'rect' };
 
     const forms = [
@@ -1037,6 +1037,59 @@
       if (!line || line.startsWith('%%')) continue;
       if (/^(classDef|class|style|linkStyle|click)\b/i.test(line)) continue;
       if (/^(subgraph|end)\b/i.test(line)) continue;
+
+      // Join multiline Mermaid node definitions before parsing.
+      if (!parseEdge(line)) {
+        let joined = line;
+        let quoteOpen = false;
+        let square = 0;
+        let curly = 0;
+        let paren = 0;
+
+        const scan = (value) => {
+          quoteOpen = false;
+          square = 0;
+          curly = 0;
+          paren = 0;
+          let escaped = false;
+
+          for (const ch of value) {
+            if (escaped) {
+              escaped = false;
+              continue;
+            }
+            if (ch === '\\') {
+              escaped = true;
+              continue;
+            }
+            if (ch === '"') {
+              quoteOpen = !quoteOpen;
+              continue;
+            }
+            if (quoteOpen) continue;
+
+            if (ch === '[') square += 1;
+            else if (ch === ']') square -= 1;
+            else if (ch === '{') curly += 1;
+            else if (ch === '}') curly -= 1;
+            else if (ch === '(') paren += 1;
+            else if (ch === ')') paren -= 1;
+          }
+        };
+
+        scan(joined);
+
+        while (
+          i + 1 < lines.length &&
+          (quoteOpen || square > 0 || curly > 0 || paren > 0)
+        ) {
+          i += 1;
+          joined += '<br/>' + lines[i].trim();
+          scan(joined);
+        }
+
+        line = joined;
+      }
 
       const edge = parseEdge(line);
       if (edge) {
@@ -1256,20 +1309,10 @@
     return { svg, width: Math.ceil(width), height: Math.ceil(height) };
   }
 
-  function sourceFromElement(element) {
-    if (!element || element.closest('.rpe-sequence-diagram')) return null;
-
-    let text = '';
-    if (element.tagName === 'PRE') {
-      const code = element.querySelector(':scope > code');
-      text = (code ? code.textContent : element.textContent || '').trim();
-    } else if (element.tagName === 'P') {
-      // Redmine's issue/Wiki preview renders plain Mermaid text as
-      // <p>line1<br>line2...</p>, not as <pre>. innerText preserves those
-      // line breaks, so the same flowchart parser can consume it.
-      text = (element.innerText || element.textContent || '').trim();
-    }
-
+  function sourceFromPre(pre) {
+    if (!pre || pre.closest('.rpe-sequence-diagram')) return null;
+    const code = pre.querySelector(':scope > code');
+    const text = (code ? code.textContent : pre.textContent || '').trim();
     if (!/^(?:flowchart|graph)\s+(?:TD|TB|BT|LR|RL)\b/i.test(text)) return null;
     return text;
   }
@@ -1471,13 +1514,7 @@
   function init() {
     initScheduled = false;
     if (!TARGET_PATH.test(location.pathname)) return;
-
-    // Saved issue/Wiki content may use <pre>, while Redmine's live preview
-    // uses <p> with <br> separators. Support both DOM forms.
-    document.querySelectorAll('pre, .wiki-preview p, .wiki p').forEach((element) => {
-      const source = sourceFromElement(element);
-      if (source) renderPre(element, source);
-    });
+    document.querySelectorAll('pre, .wiki-preview p').forEach((pre) => { const source = sourceFromPre(pre); if (source) renderPre(pre, source); });
   }
   function scheduleInit() { if (!initScheduled) { initScheduled = true; requestAnimationFrame(init); } }
   function startObserver() {
@@ -1489,4 +1526,3 @@
   document.addEventListener('DOMContentLoaded', () => { init(); startObserver(); });
   document.addEventListener('turbo:load', () => { init(); startObserver(); });
 })();
-
