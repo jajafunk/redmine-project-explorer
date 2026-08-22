@@ -4,6 +4,7 @@ require 'cgi'
 require 'digest'
 require 'fileutils'
 require 'open3'
+require_relative '../../app/services/redmine_project_explorer/flowchart_svg_renderer'
 
 module RedmineProjectExplorer
   module PdfSequenceSupport
@@ -15,20 +16,38 @@ module RedmineProjectExplorer
     # PNG image before RBPDF consumes the HTML.  RBPDF cannot render SVG
     # directly, so the plugin first renders SVG with its offline renderer and
     # then rasterizes that SVG to PNG with the local ImageMagick executable.
-    def replace_sequence_blocks(html)
+    def replace_sequence_blocks(html, raw_source = nil)
       source_html = html.to_s
+      raw_text = raw_source.to_s
       replaced = false
 
       result = source_html.gsub(%r{<pre\b[^>]*>.*?</pre>}mi) do |block|
         source = extract_source(block)
-        unless source.match?(/\AsequenceDiagram\b/)
-          next block
+
+        # RedmineのPDF用Markdown変換では、コードブロック先頭の
+        # flowchart/graph ヘッダがHTML側から落ちる場合がある。
+        # その場合だけ保存されている元テキストを使用する。
+        unless source.match?(/\A(?:sequenceDiagram|flowchart|graph)\b/i)
+          if raw_text.match?(/\A\s*(?:sequenceDiagram|flowchart|graph)\b/i)
+            source = raw_text.strip
+          end
         end
 
+        renderer =
+          if source.match?(/\AsequenceDiagram\b/i)
+            RedmineProjectExplorer::SequenceSvgRenderer.new(source)
+          elsif source.match?(/\A(?:flowchart|graph)\s+(?:TD|TB|BT|LR|RL)\b/i)
+            RedmineProjectExplorer::FlowchartSvgRenderer.new(source)
+          end
+
+        next block unless renderer
+
         begin
-          svg = RedmineProjectExplorer::SequenceSvgRenderer.new(source).render
+          svg = renderer.render
           path = cache_png(svg)
+
           replaced = true
+
           %(<div style="text-align:center"><img src="#{PREFIX}#{CGI.escapeHTML(path)}" width="650" /></div>)
         rescue StandardError => e
           log("render failed: #{e.class}: #{e.message}")
@@ -36,10 +55,9 @@ module RedmineProjectExplorer
         end
       end
 
-      log("sequence block replaced=#{replaced}")
+      log("mermaid block replaced=#{replaced}")
       result
     end
-
     def extract_source(block)
       CGI.unescapeHTML(
         block.gsub(%r{</?code\b[^>]*>}mi, '')
@@ -78,7 +96,7 @@ module RedmineProjectExplorer
         FileUtils.rm_f(png_path)
         message = stderr.to_s.strip
         message = stdout.to_s.strip if message.empty?
-        raise "ImageMagick SVG->PNG failed (status=#{status.exitstatus}): #{message}"
+        raise "rsvg-convert SVG->PNG failed (status=#{status.exitstatus}): #{message}"
       end
 
       log("rasterized SVG to PNG #{png_path}")
@@ -96,8 +114,18 @@ module RedmineProjectExplorer
   module IssuesPdfHelperPatch
     def pdf_format_text(object, attribute)
       html = super
-      RedmineProjectExplorer::PdfSequenceSupport.replace_sequence_blocks(html)
+
+      raw_source =
+        if object.respond_to?(attribute)
+          object.public_send(attribute)
+        end
+
+      RedmineProjectExplorer::PdfSequenceSupport.replace_sequence_blocks(
+        html,
+        raw_source
+      )
     end
+
   end
 
   # Redmine's ITCPDF resolves <img src="..."> through get_image_filename.
