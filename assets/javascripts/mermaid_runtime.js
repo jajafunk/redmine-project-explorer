@@ -553,8 +553,52 @@
         error
       );
     }
-  }
-  function wireComponent(component) {
+  }  function wireComponent(component) {
+    const ratioWidthInput =
+      component.querySelector('[data-role="export-width"]');
+
+    const ratioHeightInput =
+      component.querySelector('[data-role="export-height"]');
+
+    const ratioLockInput =
+      component.querySelector('[data-role="ratio-lock"]');
+
+    component.dataset.rpeRatioSyncInstalled = '1';
+
+    function exportAspectRatio() {
+      const baseWidth = Number(component.dataset.baseWidth);
+      const baseHeight = Number(component.dataset.baseHeight);
+
+      if (!(baseWidth > 0) || !(baseHeight > 0)) {
+        return null;
+      }
+
+      return baseHeight / baseWidth;
+    }
+
+    ratioWidthInput?.addEventListener('input', () => {
+      if (!ratioLockInput?.checked) return;
+
+      const ratio = exportAspectRatio();
+      const width = Number(ratioWidthInput.value);
+
+      if (!ratio || !(width > 0)) return;
+
+      ratioHeightInput.value =
+        String(Math.max(100, Math.round(width * ratio)));
+    });
+
+    ratioHeightInput?.addEventListener('input', () => {
+      if (!ratioLockInput?.checked) return;
+
+      const ratio = exportAspectRatio();
+      const height = Number(ratioHeightInput.value);
+
+      if (!ratio || !(height > 0)) return;
+
+      ratioWidthInput.value =
+        String(Math.max(100, Math.round(height / ratio)));
+    });
     const menuButton =
       component.querySelector('[data-role="menu-button"]');
     const menu =
