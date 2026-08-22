@@ -267,16 +267,181 @@
     const svg = currentSvg(component);
     if (!svg) return;
 
+    const clone = svg.cloneNode(true);
+
+    clone.setAttribute(
+      'xmlns',
+      'http://www.w3.org/2000/svg'
+    );
+
+    /*
+     * SVG保存時も Mermaid の foreignObject ラベルを
+     * 通常の SVG <text>/<tspan> に変換する。
+     * PNG/JPEG保存と同じ考え方で、<br> を改行として保持する。
+     */
+    const originals =
+      Array.from(svg.querySelectorAll('foreignObject'));
+
+    const copies =
+      Array.from(clone.querySelectorAll('foreignObject'));
+
+    copies.forEach((foreignObject, index) => {
+      const original = originals[index];
+      if (!original) return;
+
+      const labelSource =
+        original.querySelector(
+          '.nodeLabel, .edgeLabel, .label'
+        ) || original;
+
+      const labelClone =
+        labelSource.cloneNode(true);
+
+      labelClone
+        .querySelectorAll('br')
+        .forEach((br) => {
+          br.replaceWith(
+            document.createTextNode('\n')
+          );
+        });
+
+      const rawText =
+        (labelClone.textContent || '')
+          .replace(/\u00a0/g, ' ')
+          .replace(/\r/g, '')
+          .trim();
+
+      const lines =
+        rawText
+          .split('\n')
+          .map((line) => line.trim())
+          .filter(Boolean);
+
+      if (!lines.length) {
+        foreignObject.remove();
+        return;
+      }
+
+      const x =
+        Number(foreignObject.getAttribute('x')) || 0;
+
+      const y =
+        Number(foreignObject.getAttribute('y')) || 0;
+
+      const w =
+        Number(foreignObject.getAttribute('width')) || 0;
+
+      const h =
+        Number(foreignObject.getAttribute('height')) || 0;
+
+      const label =
+        original.querySelector(
+          '.nodeLabel, .edgeLabel, .label, span, div'
+        ) || original;
+
+      const style =
+        window.getComputedStyle(label);
+
+      const fontSize =
+        parseFloat(style.fontSize) || 16;
+
+      const lineHeight =
+        fontSize * 1.35;
+
+      const textElement =
+        document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'text'
+        );
+
+      textElement.setAttribute(
+        'x',
+        String(x + (w / 2))
+      );
+
+      textElement.setAttribute(
+        'y',
+        String(y + (h / 2))
+      );
+
+      textElement.setAttribute(
+        'text-anchor',
+        'middle'
+      );
+
+      textElement.setAttribute(
+        'dominant-baseline',
+        'middle'
+      );
+
+      textElement.setAttribute(
+        'font-size',
+        String(fontSize)
+      );
+
+      textElement.setAttribute(
+        'font-family',
+        style.fontFamily ||
+        'Arial, Noto Sans JP, Yu Gothic, sans-serif'
+      );
+
+      if (style.fontWeight) {
+        textElement.setAttribute(
+          'font-weight',
+          style.fontWeight
+        );
+      }
+
+      textElement.setAttribute(
+        'fill',
+        style.color || '#333333'
+      );
+
+      lines.forEach((line, lineIndex) => {
+        const tspan =
+          document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'tspan'
+          );
+
+        tspan.setAttribute(
+          'x',
+          String(x + (w / 2))
+        );
+
+        if (lineIndex === 0) {
+          tspan.setAttribute(
+            'dy',
+            String(
+              -((lines.length - 1) * lineHeight) / 2
+            )
+          );
+        } else {
+          tspan.setAttribute(
+            'dy',
+            String(lineHeight)
+          );
+        }
+
+        tspan.textContent = line;
+        textElement.appendChild(tspan);
+      });
+
+      foreignObject.replaceWith(textElement);
+    });
+
     const xml =
       '<?xml version="1.0" encoding="UTF-8"?>\n' +
-      new XMLSerializer().serializeToString(svg);
+      new XMLSerializer().serializeToString(clone);
 
     downloadBlob(
-      new Blob([xml], { type: 'image/svg+xml;charset=utf-8' }),
+      new Blob(
+        [xml],
+        { type: 'image/svg+xml;charset=utf-8' }
+      ),
       `mermaid-${component.dataset.diagramId}.svg`
     );
   }
-
   async function exportRaster(component, mimeType) {
     const svg = currentSvg(component);
     if (!svg) return;
