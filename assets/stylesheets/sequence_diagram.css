@@ -361,3 +361,192 @@
     flex-wrap: wrap;
   }
 }
+
+/* ============================================================
+   Mermaid runtime layout override
+   Diagram: left / Preview options: right
+   ============================================================ */
+
+.rpe-mermaid-diagram .rpe-sequence-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 320px !important;
+  gap: 16px !important;
+  align-items: start !important;
+}
+
+.rpe-mermaid-diagram .rpe-sequence-main {
+  min-width: 0 !important;
+}
+
+.rpe-mermaid-diagram .rpe-sequence-options {
+  width: 320px !important;
+  min-width: 320px !important;
+  max-width: 320px !important;
+  box-sizing: border-box !important;
+  align-self: start !important;
+}
+
+.rpe-mermaid-diagram .rpe-sequence-viewer {
+  overflow: auto !important;
+}
+
+.rpe-mermaid-diagram .rpe-sequence-canvas {
+  min-width: 0 !important;
+}
+
+.rpe-mermaid-diagram .rpe-sequence-canvas svg {
+  display: block !important;
+  max-width: none !important;
+  height: auto !important;
+}
+
+@media (max-width: 900px) {
+  .rpe-mermaid-diagram .rpe-sequence-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .rpe-mermaid-diagram .rpe-sequence-options {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
+/* ============================================================
+   Mermaid viewport / label fix
+   ============================================================ */
+
+.rpe-mermaid-diagram .rpe-sequence-viewer {
+  height: 70vh !important;
+  min-height: 500px !important;
+  max-height: 900px !important;
+  overflow: auto !important;
+  position: relative !important;
+}
+
+.rpe-mermaid-diagram .rpe-sequence-canvas {
+  width: max-content !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+}
+
+.rpe-mermaid-diagram .rpe-sequence-canvas svg {
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  overflow: visible !important;
+}
+
+/* Mermaid HTML labels */
+.rpe-mermaid-diagram foreignObject {
+  overflow: visible !important;
+}
+
+.rpe-mermaid-diagram .nodeLabel,
+.rpe-mermaid-diagram .edgeLabel {
+  font-family: Arial, "Noto Sans JP", "Yu Gothic", sans-serif !important;
+  line-height: 1.25 !important;
+}
+
+.rpe-mermaid-diagram .nodeLabel p,
+.rpe-mermaid-diagram .edgeLabel p {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.25 !important;
+  overflow: visible !important;
+}
+
+.rpe-mermaid-diagram .label,
+.rpe-mermaid-diagram .label-container {
+  overflow: visible !important;
+}
+/* ============================================================
+   Mermaid final layout fix
+   2026-08-22
+   ============================================================ */
+
+/* オプション非表示時は図を全幅使用 */
+.rpe-mermaid-diagram .rpe-sequence-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 16px !important;
+  align-items: start !important;
+}
+
+/* オプション表示時だけ右側320pxを確保 */
+.rpe-mermaid-diagram .rpe-sequence-layout:has(
+  > .rpe-sequence-options:not([hidden])
+) {
+  grid-template-columns: minmax(0, 1fr) 320px !important;
+}
+
+/* hidden属性を必ず優先 */
+.rpe-mermaid-diagram .rpe-sequence-options[hidden] {
+  display: none !important;
+}
+
+/* 表示時 */
+.rpe-mermaid-diagram .rpe-sequence-options:not([hidden]) {
+  display: block !important;
+  width: 320px !important;
+  min-width: 320px !important;
+  max-width: 320px !important;
+}
+
+/* 図のスクロール領域 */
+.rpe-mermaid-diagram .rpe-sequence-viewer {
+  height: 70vh !important;
+  min-height: 500px !important;
+  max-height: 900px !important;
+  overflow: auto !important;
+}
+
+/* Mermaid自身にSVGサイズを任せる */
+.rpe-mermaid-diagram .rpe-sequence-canvas {
+  width: max-content !important;
+  min-width: 100% !important;
+}
+
+.rpe-mermaid-diagram .rpe-sequence-canvas svg {
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+}
+
+/*
+ * Mermaidが計測した文字サイズを変えない。
+ * line-height / font-size / padding の独自上書きを解除。
+ */
+.rpe-mermaid-diagram .nodeLabel,
+.rpe-mermaid-diagram .edgeLabel,
+.rpe-mermaid-diagram .nodeLabel p,
+.rpe-mermaid-diagram .edgeLabel p {
+  line-height: normal !important;
+  padding: initial !important;
+}
+
+.rpe-mermaid-diagram .nodeLabel p,
+.rpe-mermaid-diagram .edgeLabel p {
+  margin: 0 !important;
+}
+
+/* HTML labelが枠外で不必要に切られないようにする */
+.rpe-mermaid-diagram foreignObject {
+  overflow: visible !important;
+}
+
+@media (max-width: 900px) {
+  .rpe-mermaid-diagram .rpe-sequence-layout,
+  .rpe-mermaid-diagram .rpe-sequence-layout:has(
+    > .rpe-sequence-options:not([hidden])
+  ) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .rpe-mermaid-diagram .rpe-sequence-options:not([hidden]) {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
