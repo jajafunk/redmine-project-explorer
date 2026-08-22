@@ -286,6 +286,9 @@
   }
 
   async function exportRaster(component, mimeType) {
+    const svg = currentSvg(component);
+    if (!svg) return;
+
     const widthInput =
       component.querySelector('[data-role="export-width"]');
     const heightInput =
@@ -294,15 +297,6 @@
       component.querySelector('[data-role="export-background"]');
     const qualityInput =
       component.querySelector('[data-role="jpeg-quality"]');
-    const sourceElement =
-      component.querySelector('.rpe-sequence-source');
-
-    if (!sourceElement || !window.mermaid) return;
-
-    const source =
-      (sourceElement.textContent || '').trim();
-
-    if (!source) return;
 
     const width =
       Math.max(100, Number(widthInput.value) || 1200);
@@ -323,111 +317,236 @@
       ) / 100;
 
     try {
-      const renderId =
-        `rpe-export-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const clone = svg.cloneNode(true);
 
-      const result =
-        await window.mermaid.render(
-          renderId,
-          `%%{init: {"flowchart": {"htmlLabels": false}} }%%\n${source}`
-        );
-
-      const parser = new DOMParser();
-
-      const doc =
-        parser.parseFromString(
-          result.svg,
-          'image/svg+xml'
-        );
-
-      const exportSvg =
-        doc.documentElement;
-
-      exportSvg.setAttribute(
+      clone.setAttribute(
         'xmlns',
         'http://www.w3.org/2000/svg'
       );
 
-      exportSvg.setAttribute(
-        'width',
-        String(width)
-      );
+      /*
+       * Mermaid flowchart の文字は foreignObject の HTML ラベル。
+       * SVG を Image/Canvas 化すると Chrome でも文字だけ欠落する場合があるため、
+       * 保存時だけ foreignObject を通常の SVG <text> に変換する。
+       */
+      const originals =
+        Array.from(svg.querySelectorAll('foreignObject'));
 
-      exportSvg.setAttribute(
-        'height',
-        String(height)
-      );
+      const copies =
+        Array.from(clone.querySelectorAll('foreignObject'));
+
+      copies.forEach((foreignObject, index) => {
+        const original = originals[index];
+        if (!original) return;
+
+        const labelSource =
+          original.querySelector(
+            '.nodeLabel, .edgeLabel, .label'
+          ) || original;
+
+        const labelClone =
+          labelSource.cloneNode(true);
+
+        /*
+         * Mermaid の HTML ラベル内 <br> を
+         * SVG <tspan> 用の明示的な改行へ変換する。
+         */
+        labelClone
+          .querySelectorAll('br')
+          .forEach((br) => {
+            br.replaceWith(
+              document.createTextNode('\n')
+            );
+          });
+
+        const rawText =
+          (labelClone.textContent || '')
+            .replace(/\u00a0/g, ' ')
+            .replace(/\r/g, '')
+            .trim();
+
+        const lines =
+          rawText
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean);
+
+        if (!lines.length) {
+          foreignObject.remove();
+          return;
+        }
+
+        const x =
+          Number(foreignObject.getAttribute('x')) || 0;
+
+        const y =
+          Number(foreignObject.getAttribute('y')) || 0;
+
+        const w =
+          Number(foreignObject.getAttribute('width')) || 0;
+
+        const h =
+          Number(foreignObject.getAttribute('height')) || 0;
+
+        const label =
+          original.querySelector(
+            '.nodeLabel, .edgeLabel, .label, span, div'
+          ) || original;
+
+        const style =
+          window.getComputedStyle(label);
+
+        const fontSize =
+          parseFloat(style.fontSize) || 16;
+
+        const lineHeight =
+          fontSize * 1.35;
+
+        const text =
+          document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'text'
+          );
+
+        text.setAttribute(
+          'x',
+          String(x + (w / 2))
+        );
+
+        text.setAttribute(
+          'y',
+          String(y + (h / 2))
+        );
+
+        text.setAttribute(
+          'text-anchor',
+          'middle'
+        );
+
+        text.setAttribute(
+          'dominant-baseline',
+          'middle'
+        );
+
+        text.setAttribute(
+          'font-size',
+          String(fontSize)
+        );
+
+        text.setAttribute(
+          'font-family',
+          style.fontFamily ||
+          'Arial, Noto Sans JP, Yu Gothic, sans-serif'
+        );
+
+        if (style.fontWeight) {
+          text.setAttribute(
+            'font-weight',
+            style.fontWeight
+          );
+        }
+
+        text.setAttribute(
+          'fill',
+          style.color || '#333333'
+        );
+
+        lines.forEach((line, lineIndex) => {
+          const tspan =
+            document.createElementNS(
+              'http://www.w3.org/2000/svg',
+              'tspan'
+            );
+
+          tspan.setAttribute(
+            'x',
+            String(x + (w / 2))
+          );
+
+          if (lineIndex === 0) {
+            tspan.setAttribute(
+              'dy',
+              String(
+                -((lines.length - 1) * lineHeight) / 2
+              )
+            );
+          } else {
+            tspan.setAttribute(
+              'dy',
+              String(lineHeight)
+            );
+          }
+
+          tspan.textContent = line;
+          text.appendChild(tspan);
+        });
+
+        foreignObject.replaceWith(text);
+      });
 
       const xml =
-        new XMLSerializer().serializeToString(exportSvg);
+        '<?xml version="1.0" encoding="UTF-8"?>\n' +
+        new XMLSerializer().serializeToString(clone);
 
-      const svgBlob =
+      const blob =
         new Blob(
           [xml],
           { type: 'image/svg+xml;charset=utf-8' }
         );
 
       const url =
-        URL.createObjectURL(svgBlob);
+        URL.createObjectURL(blob);
 
       const image =
         new Image();
 
       image.onload = () => {
-        try {
-          const canvas =
-            document.createElement('canvas');
+        const canvas =
+          document.createElement('canvas');
 
-          canvas.width = width;
-          canvas.height = height;
+        canvas.width = width;
+        canvas.height = height;
 
-          const ctx =
-            canvas.getContext('2d');
+        const ctx =
+          canvas.getContext('2d');
 
-          if (!ctx) {
-            URL.revokeObjectURL(url);
-            return;
-          }
-
-          ctx.fillStyle = background;
-          ctx.fillRect(0, 0, width, height);
-
-          ctx.drawImage(
-            image,
-            0,
-            0,
-            width,
-            height
-          );
-
+        if (!ctx) {
           URL.revokeObjectURL(url);
-
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) return;
-
-              const ext =
-                mimeType === 'image/jpeg'
-                  ? 'jpg'
-                  : 'png';
-
-              downloadBlob(
-                blob,
-                `mermaid-${component.dataset.diagramId}.${ext}`
-              );
-            },
-            mimeType,
-            mimeType === 'image/jpeg'
-              ? quality
-              : undefined
-          );
-        } catch (error) {
-          URL.revokeObjectURL(url);
-          console.error(
-            'Mermaid raster export failed:',
-            error
-          );
+          return;
         }
+
+        ctx.fillStyle = background;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.drawImage(
+          image,
+          0,
+          0,
+          width,
+          height
+        );
+
+        URL.revokeObjectURL(url);
+
+        canvas.toBlob(
+          (result) => {
+            if (!result) return;
+
+            const ext =
+              mimeType === 'image/jpeg'
+                ? 'jpg'
+                : 'png';
+
+            downloadBlob(
+              result,
+              `mermaid-${component.dataset.diagramId}.${ext}`
+            );
+          },
+          mimeType,
+          mimeType === 'image/jpeg'
+            ? quality
+            : undefined
+        );
       };
 
       image.onerror = () => {
@@ -439,7 +558,8 @@
       };
 
       image.src = url;
-    } catch (error) {
+    }
+    catch (error) {
       console.error(
         'Mermaid raster export failed:',
         error
