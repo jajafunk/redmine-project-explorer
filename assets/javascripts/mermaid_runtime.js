@@ -565,6 +565,46 @@
 
     component.dataset.rpeRatioSyncInstalled = '1';
 
+    /*
+     * 画像保存設定を現在の図の初期値へ戻す。
+     */
+    const resetExportButton =
+      component.querySelector('[data-action="reset-export"]');
+
+    const jpegQualityInput =
+      component.querySelector('[data-role="jpeg-quality"]');
+
+    component.dataset.rpeResetExportInstalled = '1';
+
+    if (resetExportButton) {
+      resetExportButton.onclick = (event) => {
+        event.preventDefault();
+
+        const baseWidth =
+          Number(component.dataset.baseWidth);
+
+        const baseHeight =
+          Number(component.dataset.baseHeight);
+
+        if (baseWidth > 0) {
+          ratioWidthInput.value =
+            String(Math.round(baseWidth));
+        }
+
+        if (baseHeight > 0) {
+          ratioHeightInput.value =
+            String(Math.round(baseHeight));
+        }
+
+        if (ratioLockInput) {
+          ratioLockInput.checked = true;
+        }
+
+        if (jpegQualityInput) {
+          jpegQualityInput.value = '90';
+        }
+      };
+    }
     function exportAspectRatio() {
       const baseWidth = Number(component.dataset.baseWidth);
       const baseHeight = Number(component.dataset.baseHeight);
