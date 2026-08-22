@@ -174,14 +174,6 @@
             </div>
 
             <div class="rpe-sequence-option-row">
-              <span class="rpe-sequence-field-label">背景色</span>
-              <input type="color"
-                     value="#ffffff"
-                     data-role="export-background">
-              <span data-role="export-background-text">#ffffff</span>
-            </div>
-
-            <div class="rpe-sequence-option-row">
               <span class="rpe-sequence-field-label">JPEG品質</span>
               <input type="number"
                      min="10"
@@ -293,8 +285,6 @@
       component.querySelector('[data-role="export-width"]');
     const heightInput =
       component.querySelector('[data-role="export-height"]');
-    const bgInput =
-      component.querySelector('[data-role="export-background"]');
     const qualityInput =
       component.querySelector('[data-role="jpeg-quality"]');
 
@@ -303,9 +293,7 @@
 
     const height =
       Math.max(100, Number(heightInput.value) || 800);
-
-    const background =
-      bgInput.value || '#ffffff';
+    const background = '#ffffff';
 
     const quality =
       Math.max(
