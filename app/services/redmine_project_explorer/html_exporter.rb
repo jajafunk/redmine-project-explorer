@@ -1,4 +1,4 @@
-# frozen_string_literal: true
+﻿# frozen_string_literal: true
 
 require 'cgi'
 require 'fileutils'
@@ -31,8 +31,8 @@ module RedmineProjectExplorer
       write_file('index.html', tree_page)
       write_file('assets/project-explorer.css', export_css)
       write_file('assets/project-explorer.js', export_js)
-      write_file('assets/sequence-diagram.js', plugin_asset('assets/javascripts/sequence_diagram.js'))
-      write_file('assets/flowchart.js', plugin_asset('assets/javascripts/flowchart.js'))
+      write_file('assets/mermaid.min.js', plugin_asset('assets/javascripts/vendor/mermaid.min.js'))
+      write_file('assets/mermaid-runtime.js', plugin_asset('assets/javascripts/mermaid_runtime.js'))
       write_file('assets/sequence-diagram.css', plugin_asset('assets/stylesheets/sequence_diagram.css'))
 
       @issues.each do |issue|
@@ -272,8 +272,8 @@ module RedmineProjectExplorer
           <title>##{issue.id} #{h(issue.subject)}</title>
           <link rel="stylesheet" href="../assets/project-explorer.css">
           <link rel="stylesheet" href="../assets/sequence-diagram.css">
-          <script defer src="../assets/sequence-diagram.js"></script>
-          <script defer src="../assets/flowchart.js"></script>
+          <script defer src="../assets/mermaid.min.js"></script>
+          <script defer src="../assets/mermaid-runtime.js"></script>
         </head>
         <body>
           <header class="page-header">

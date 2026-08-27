@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   'use strict';
 
   const TARGET_PATH =
@@ -45,6 +45,28 @@
       const header = children[i];
 
       if (header.tagName !== 'P') continue;
+
+      /*
+       * HTML書き出しではMermaidコード全体が
+       * 1つの <p> 内に <br> 区切りで入る。
+       */
+      if (header.querySelector('br')) {
+        const clone = header.cloneNode(true);
+
+        clone.querySelectorAll('br').forEach((br) => {
+          br.replaceWith(document.createTextNode('\n'));
+        });
+
+        const source = (clone.textContent || '').trim();
+
+        if (isMermaid(source)) {
+          return {
+            source,
+            header,
+            body: null
+          };
+        }
+      }
 
       const headerText = (header.textContent || '').trim();
       if (!isMermaid(headerText)) continue;
@@ -990,7 +1012,7 @@
       const holder = document.createElement('div');
 
       saved.header.replaceWith(holder);
-      saved.body.remove();
+      saved.body?.remove();
 
       renderTarget(holder, saved.source);
     });
@@ -1059,3 +1081,4 @@
     boot();
   }
 })();
+

@@ -1,4 +1,4 @@
-module TicketTreeHelper
+﻿module TicketTreeHelper
   def render_ticket_tree_node(issue, children_by_parent)
     children = children_by_parent[issue.id]
     link = safe_join([
@@ -32,7 +32,7 @@ module TicketTreeHelper
     }
     content_tag(:li, class: 'ticket-tree-node', data: data) do
       if children.any?
-        content_tag(:details, id: "ticket-tree-issue-#{issue.id}", open: true) do
+        content_tag(:details, id: "ticket-tree-issue-#{issue.id}", open: false) do
           safe_join([
             content_tag(:summary, body),
             content_tag(:ul, safe_join(children.map { |child| render_ticket_tree_node(child, children_by_parent) }), class: 'ticket-tree-list')
@@ -58,4 +58,5 @@ module TicketTreeHelper
     end
   end
 end
+
 

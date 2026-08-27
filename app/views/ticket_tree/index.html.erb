@@ -1,4 +1,4 @@
-<% html_title 'チケットツリー' %>
+﻿<% html_title 'チケットツリー' %>
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'project_explorer', plugin: 'redmine_project_explorer' %>
   <%= javascript_include_tag 'project_explorer', plugin: 'redmine_project_explorer', defer: true %>
@@ -89,7 +89,14 @@
     <button type="button" data-action="edit">編集</button>
     <button type="button" data-action="child">子チケットを作成</button>
     <button type="button" data-action="copy">リンクをコピー</button>
+    <button type="button" data-action="expand-all">すべて展開</button>
+    <button type="button" data-action="collapse-all">すべて折りたたむ</button>
+    <button type="button" data-action="export-html">全体をHTML書き出し</button>
+    <button type="button" data-action="display-settings">表示設定</button>
   </div>
 </div>
+
+
+
 
 

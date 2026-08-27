@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   'use strict';
 
   function init() {
@@ -9,7 +9,7 @@
     app.dataset.initialized = 'true';
 
     const pid = app.dataset.projectId;
-    const expandKey = `rpe:expanded:${pid}`;
+    const expandKey = `rpe:expanded:v2:${pid}`;
     const refreshKey = `rpe:refresh:${pid}`;
     const showClosedKey = `rpe:showClosed:${pid}`;
     const statusKey = `rpe:statuses:${pid}`;
@@ -59,9 +59,12 @@
 
     function loadExpanded() {
       const saved = loadJson(expandKey, null);
-      if (!Array.isArray(saved)) return;
 
-      const set = new Set(saved);
+      // 初回はすべて折りたたみ。
+      // 保存済みなら前回の展開状態を復元する。
+      const set =
+        new Set(Array.isArray(saved) ? saved : []);
+
       details().forEach((detail) => {
         detail.open = set.has(detail.id);
       });
@@ -242,7 +245,13 @@
 
       node.hidden = !visible;
 
-      if (childMatches) {
+      const filtering =
+        term ||
+        !showClosed.checked ||
+        selectedStatuses.size !== statuses.length ||
+        selectedPriorities.size !== priorities.length;
+
+      if (childMatches && filtering) {
         const detail = node.querySelector(':scope > details');
         if (detail) detail.open = true;
       }
@@ -468,11 +477,7 @@
       );
     }
 
-    details().forEach((detail) =>
-      detail.addEventListener('toggle', saveExpanded)
-    );
-
-    root.addEventListener('click', (event) => {
+root.addEventListener('click', (event) => {
       const node =
         event.target.closest('li.ticket-tree-node');
 
@@ -486,6 +491,92 @@
       if (node) showContextMenu(event, node);
     });
 
+    const displaySettingsItem =
+      contextMenu.querySelector('[data-action="display-settings"]');
+
+    const contextExpandAll =
+      contextMenu.querySelector('[data-action="expand-all"]');
+
+    const contextCollapseAll =
+      contextMenu.querySelector('[data-action="collapse-all"]');
+
+    const contextExportHtml =
+      contextMenu.querySelector('[data-action="export-html"]');
+
+    contextExpandAll.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      document.getElementById('ticket-tree-expand-all').click();
+      hideContextMenu();
+    });
+
+    contextCollapseAll.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      document.getElementById('ticket-tree-collapse-all').click();
+      hideContextMenu();
+    });
+
+    contextExportHtml.addEventListener('click', async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      hideContextMenu();
+      await exportHtml();
+    });
+
+    root.addEventListener('contextmenu', (event) => {
+      const node =
+        event.target.closest('li.ticket-tree-node');
+
+      contextExportHtml.textContent =
+        exportButton.textContent;
+
+      if (node) {
+        displaySettingsItem.hidden = false;
+        return;
+      }
+
+      event.preventDefault();
+      current = null;
+
+      contextMenu
+        .querySelectorAll(
+          '[data-action="open"],[data-action="edit"],[data-action="child"],[data-action="copy"]'
+        )
+        .forEach((button) => {
+          button.hidden = true;
+        });
+
+      displaySettingsItem.hidden = false;
+      contextMenu.hidden = false;
+
+      contextMenu.style.left =
+        `${Math.max(0, Math.min(event.clientX, innerWidth - 210))}px`;
+
+      contextMenu.style.top =
+        `${Math.max(0, Math.min(event.clientY, innerHeight - 90))}px`;
+    });
+
+    displaySettingsItem.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const rect = contextMenu.getBoundingClientRect();
+
+      hideContextMenu();
+
+      optionsMenu.style.position = 'fixed';
+      optionsMenu.style.right = 'auto';
+      optionsMenu.style.left =
+        `${Math.max(8, Math.min(rect.left, innerWidth - 300))}px`;
+      optionsMenu.style.top =
+        `${Math.max(8, Math.min(rect.top, innerHeight - 500))}px`;
+
+      toggleOptionsMenu(true);
+    });
     contextMenu.addEventListener('click', async (event) => {
       const action = event.target.dataset.action;
       if (!action || !current) return;
@@ -608,6 +699,12 @@
 
     buildFilterOptions();
     loadExpanded();
+
+    // 初期状態を復元してから、以後の開閉を保存する。
+    details().forEach((detail) =>
+      detail.addEventListener('toggle', saveExpanded)
+    );
+
     refresh(localStorage.getItem(refreshKey) === '1');
     applyFilters();
   }
@@ -615,3 +712,9 @@
   document.addEventListener('DOMContentLoaded', init);
   document.addEventListener('turbo:load', init);
 })();
+
+
+
+
+
+
