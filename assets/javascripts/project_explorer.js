@@ -673,6 +673,11 @@ root.addEventListener('click', (event) => {
       refresh(false);
       buildFilterOptions();
       applyFilters();
+
+      resetButton.classList.add('is-active');
+      setTimeout(() => {
+        resetButton.classList.remove('is-active');
+      }, 1000);
     });
 
     showChildCounts.addEventListener('change', () => {
@@ -712,6 +717,7 @@ root.addEventListener('click', (event) => {
   document.addEventListener('DOMContentLoaded', init);
   document.addEventListener('turbo:load', init);
 })();
+
 
 
 
