@@ -583,6 +583,7 @@ root.addEventListener('click', (event) => {
 
       const url = current.dataset.issueUrl;
 
+      if (action === 'new') location.href = app.dataset.newIssueUrl;
       if (action === 'open') location.href = url;
       if (action === 'edit') location.href = current.dataset.editUrl;
       if (action === 'child') location.href = current.dataset.childUrl;
@@ -717,6 +718,7 @@ root.addEventListener('click', (event) => {
   document.addEventListener('DOMContentLoaded', init);
   document.addEventListener('turbo:load', init);
 })();
+
 
 
 

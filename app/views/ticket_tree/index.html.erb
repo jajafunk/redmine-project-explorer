@@ -5,7 +5,7 @@
 <% end %>
 <div class="contextual"><%= link_to 'チケット一覧', project_issues_path(@project), class: 'icon icon-list' %></div>
 <h2>チケットツリー</h2>
-<div id="ticket-tree-app" class="ticket-tree-app" data-project-id="<%= @project.id %>" data-refresh-seconds="60">
+<div id="ticket-tree-app" class="ticket-tree-app" data-project-id="<%= @project.id %>" data-refresh-seconds="60" data-new-issue-url="<%= new_project_issue_path(@project) %>">
   <div class="ticket-tree-toolbar">
     <label class="ticket-tree-search-wrap">🔍 <input id="ticket-tree-search" type="search" placeholder="番号・件名・状態・担当者で検索" autocomplete="off"></label>
     <label>並び替え
@@ -85,6 +85,7 @@
     <ul id="ticket-tree-root" class="ticket-tree-list ticket-tree-root"><%= safe_join(@root_issues.map { |issue| render_ticket_tree_node(issue, @children_by_parent) }) %></ul>
   <% else %><p class="nodata">表示できるチケットがありません。</p><% end %>
   <div id="ticket-tree-context-menu" class="ticket-tree-context-menu" hidden>
+    <button type="button" data-action="new">新しいチケット</button>
     <button type="button" data-action="open">チケットを開く</button>
     <button type="button" data-action="edit">編集</button>
     <button type="button" data-action="child">子チケットを作成</button>
@@ -95,6 +96,7 @@
     <button type="button" data-action="display-settings">表示設定</button>
   </div>
 </div>
+
 
 
 
