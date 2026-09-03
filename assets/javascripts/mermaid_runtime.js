@@ -37,7 +37,7 @@
     return isMermaid(source) ? source : null;
   }
   function sourceFromSavedWiki(wiki) {
-    if (!wiki || wiki.querySelector('.rpe-sequence-diagram')) return null;
+    if (!wiki) return null;
 
     const children = Array.from(wiki.children);
 
@@ -1006,15 +1006,16 @@
     });
 
     document.querySelectorAll('.wiki').forEach((wiki) => {
-      const saved = sourceFromSavedWiki(wiki);
-      if (!saved) return;
+      let saved;
 
-      const holder = document.createElement('div');
+      while ((saved = sourceFromSavedWiki(wiki))) {
+        const holder = document.createElement('div');
 
-      saved.header.replaceWith(holder);
-      saved.body?.remove();
+        saved.header.replaceWith(holder);
+        saved.body?.remove();
 
-      renderTarget(holder, saved.source);
+        renderTarget(holder, saved.source);
+      }
     });
   }
 
