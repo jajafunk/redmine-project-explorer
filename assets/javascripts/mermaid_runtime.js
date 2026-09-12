@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   'use strict';
 
   const TARGET_PATH =
@@ -840,12 +840,19 @@
       menu.hidden = !menu.hidden;
     });
 
-    component
-      .querySelector('[data-action="toggle-options"]')
-      ?.addEventListener('click', () => {
-        options.hidden = !options.hidden;
-        menu.hidden = true;
-      });
+    const optionToggle =
+      component.querySelector('[data-action="toggle-options"]');
+
+    optionToggle?.addEventListener('click', () => {
+      options.hidden = !options.hidden;
+
+      optionToggle.textContent =
+        options.hidden
+          ? 'プレビューオプションを表示'
+          : 'プレビューオプションを消す';
+
+      menu.hidden = true;
+    });
 
     component
       .querySelector('[data-action="toggle-source"]')
